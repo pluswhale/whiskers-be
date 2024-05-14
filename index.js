@@ -10,16 +10,24 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cors());
 
+const clientOptions = { serverApi: { version: '1', strict: true, deprecationErrors: true } };
+
 // MongoDB Atlas connection URI
-const MONGODB_URI = process.env.MONGODB_URI; // You'll need to set this environment variable in Heroku
+const MONGODB_URI = "mongodb+srv://mongouser:5x7vraPGdDiGV8g3@cluster0.3yldtew.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 // Connect to MongoDB Atlas
-mongoose.connect(MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('Connected to MongoDB'))
-.catch((err) => console.error('Error connecting to MongoDB:', err));
+async function run() {
+  try {
+    // Create a Mongoose client with a MongoClientOptions object to set the Stable API version
+    await mongoose.connect(MONGODB_URI, clientOptions);
+    await mongoose.connection.db.admin().command({ ping: 1 });
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+  } finally {
+    // Ensures that the client will close when you finish/error
+    await mongoose.disconnect();
+  }
+}
+run().catch(console.dir);
 
 // Define a basic route
 app.get('/', (req, res) => {
