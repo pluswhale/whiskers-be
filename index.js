@@ -1,7 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const TelegramBot = require('node-telegram-bot-api');
 const User = require('./mongo/User'); // Import the User model
 
 // Create Express app
@@ -36,17 +35,10 @@ async function run() {
     console.log('First user created successfully!');
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
-  } finally {
-    await mongoose.disconnect();
   }
 }
 
 run().catch(console.dir);
-
-const botToken = '6790130833:AAFm1XC61QQ2nbnMNAGUgknZ1J0YDQS385E';
-
-const bot = new TelegramBot(botToken, { polling: true });
-
 
 // Define a basic route
 app.get('/', (req, res) => {
