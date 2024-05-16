@@ -22,17 +22,17 @@ async function run() {
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
     // Create the first user
-    const newUser = new User({
-      userId: '1', // Replace with an actual user ID
-      unclaimedTokens: 0,
-      spinsAvailable: 50,
-      bonusSpins: 100,
-      referralCode: 'unique_referral_code', // Replace with a unique referral code
-      referredBy: null, // If this is the first user, there is no referrer
-      referredUsers: [] // No referred users for the first user
-    });
+    // const newUser = new User({
+    //   userId: '1', // Replace with an actual user ID
+    //   unclaimedTokens: 0,
+    //   spinsAvailable: 50,
+    //   bonusSpins: 100,
+    //   referralCode: 'unique_referral_code', // Replace with a unique referral code
+    //   referredBy: null, // If this is the first user, there is no referrer
+    //   referredUsers: [] // No referred users for the first user
+    // });
 
-    await newUser.save();
+    // await newUser.save();
     console.log('First user created successfully!');
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
@@ -82,8 +82,7 @@ app.post('/spin/:userId', addFreeSpinIfNeeded, async (req, res) => {
       return res.status(400).json({ error: 'No spins available' });
     }
 
-    // Decrement spins available
-    user.unclaimedTokens = + winScore;
+    user.unclaimedTokens += winScore;
 
     if (isFreeSpin) {
       user.spinsAvailable -= 1;
