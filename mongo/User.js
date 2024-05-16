@@ -30,7 +30,12 @@ const userSchema = new mongoose.Schema({
   referredUsers: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
-  }]
+  },
+  ],
+  lastSpinTime: {
+    type: Date,
+    default: Date.now
+  },
 }, { timestamps: true });
 
 // Define a method to add bonus spins for a valid referral

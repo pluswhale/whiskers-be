@@ -71,7 +71,7 @@ app.post('/spin/:userId', addFreeSpinIfNeeded, async (req, res) => {
   try {
 
     const userId = req.params.userId;
-    const { winScore } = req.body;
+    const { winScore, isFreeSpin } = req.body;
     const user = await User.findOne({ userId });
 
     if (!user) {
@@ -84,7 +84,13 @@ app.post('/spin/:userId', addFreeSpinIfNeeded, async (req, res) => {
 
     // Decrement spins available
     user.unclaimedTokens = + winScore;
-    user.spinsAvailable -= 1;
+
+    if (isFreeSpin) {
+      user.spinsAvailable -= 1;
+    } else {
+      user.bonusSpins -= 1;
+    }
+
     await user.save();
 
     res.status(200).json({ message: 'Spin successful' });
