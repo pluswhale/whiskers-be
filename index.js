@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const User = require('./mongo/User'); // Import the User model
+const addFreeSpinIfNeeded = require('./utils/addFreeSpinIfNeeded');
 
 // Create Express app
 const app = express();
@@ -24,7 +25,7 @@ async function run() {
     const newUser = new User({
       userId: '1', // Replace with an actual user ID
       unclaimedTokens: 0,
-      spinsAvailable: 2,
+      spinsAvailable: 50,
       bonusSpins: 100,
       referralCode: 'unique_referral_code', // Replace with a unique referral code
       referredBy: null, // If this is the first user, there is no referrer
@@ -66,7 +67,7 @@ app.get('/user/:userId', async (req, res) => {
   }
 });
 
-router.post('/spin/:userId', addFreeSpinIfNeeded, async (req, res) => {
+app.post('/spin/:userId', addFreeSpinIfNeeded, async (req, res) => {
   try {
 
     const userId = req.params.userId;
