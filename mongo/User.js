@@ -41,6 +41,12 @@ userSchema.methods.addBonusSpinsForReferral = async function() {
   }
 };
 
+userSchema.methods.addFreeSpin = function() {
+  this.spinsAvailable += 1;
+  this.lastSpinTime = Date.now();
+};
+
+
 // Create the User model
 const User = mongoose.model('User', userSchema);
 

@@ -66,6 +66,34 @@ app.get('/user/:userId', async (req, res) => {
   }
 });
 
+router.post('/spin/:userId', addFreeSpinIfNeeded, async (req, res) => {
+  try {
+
+    const userId = req.params.userId;
+    const { winScore } = req.body;
+    const user = await User.findOne({ userId });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (user.spinsAvailable <= 0) {
+      return res.status(400).json({ error: 'No spins available' });
+    }
+
+    // Decrement spins available
+    user.unclaimedTokens = + winScore;
+    user.spinsAvailable -= 1;
+    await user.save();
+
+    res.status(200).json({ message: 'Spin successful' });
+
+  } catch (error) {
+    console.error('Error spinning wheel:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
