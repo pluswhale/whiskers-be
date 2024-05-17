@@ -78,7 +78,7 @@ app.post('/spin/:userId', addFreeSpinIfNeeded, async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    if (user.spinsAvailable <= 0) {
+    if (user.bonusSpins <= 0 && user.spinsAvailable <= 0) {
       return res.status(400).json({ error: 'No spins available' });
     }
 
@@ -93,6 +93,31 @@ app.post('/spin/:userId', addFreeSpinIfNeeded, async (req, res) => {
     await user.save();
 
     res.status(200).json({ message: 'Spin successful' });
+
+  } catch (error) {
+    console.error('Error spinning wheel:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/buy/:userId', async (req, res) => {
+  try {
+
+    const userId = req.params.userId;
+    const { countSpins } = req.body;
+    const user = await User.findOne({ userId });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (countSpins) {
+      user.bonusSpins += countSpins;
+    }
+
+    await user.save();
+
+    res.status(200).json({ message: 'Spins bought' });
 
   } catch (error) {
     console.error('Error spinning wheel:', error);
