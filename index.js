@@ -2,7 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const User = require('./mongo/User'); // Import the User model
-const addFreeSpinIfNeeded = require('./utils/addFreeSpinIfNeeded');
+const addFreeSpinIfNeeded = require('./middleware/addFreeSpinIfNeeded');
+const checkSpinAvailability = require('./middleware/checkSpinAvailability');
 
 // Create Express app
 const app = express();
@@ -22,17 +23,17 @@ async function run() {
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
     // Create the first user
-    // const newUser = new User({
-    //   userId: '1', // Replace with an actual user ID
-    //   unclaimedTokens: 0,
-    //   spinsAvailable: 50,
-    //   bonusSpins: 100,
-    //   referralCode: 'unique_referral_code', // Replace with a unique referral code
-    //   referredBy: null, // If this is the first user, there is no referrer
-    //   referredUsers: [] // No referred users for the first user
-    // });
+    const newUser = new User({
+      userId: '1', // Replace with an actual user ID
+      unclaimedTokens: 0,
+      spinsAvailable: 2,
+      bonusSpins: 0,
+      referralCode: 'unique_referral_code', // Replace with a unique referral code
+      referredBy: null, // If this is the first user, there is no referrer
+      referredUsers: [] // No referred users for the first user
+    });
 
-    // await newUser.save();
+    await newUser.save();
     console.log('First user created successfully!');
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
@@ -44,6 +45,31 @@ run().catch(console.dir);
 // Define a basic route
 app.get('/', (req, res) => {
   res.send('Hello World!');
+});
+
+app.post('/login/:userId', async (req, res) => {
+  const userId = req.params.userId; // Assuming userId is passed in the request body
+
+  try {
+    const user = await User.findOne({ userId });
+
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Logic to authenticate the user
+
+    // After successful authentication, proceed with the free spin check
+    await addFreeSpinIfNeeded(req, res, async () => {
+      // Login response logic here
+      res.status(200).json({ message: 'Login successful', user });
+    });
+
+  } catch (error) {
+    console.error('Error during login:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // Define a route to get a user by ID
@@ -67,7 +93,7 @@ app.get('/user/:userId', async (req, res) => {
   }
 });
 
-app.post('/spin/:userId', addFreeSpinIfNeeded, async (req, res) => {
+app.post('/spin/:userId', addFreeSpinIfNeeded, checkSpinAvailability, async (req, res) => {
   try {
 
     const userId = req.params.userId;

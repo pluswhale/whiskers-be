@@ -30,12 +30,11 @@ const userSchema = new mongoose.Schema({
   referredUsers: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
-  },
-  ],
-  lastSpinTime: {
+  }],
+  lastSpinTime: [{
     type: Date,
     default: Date.now
-  },
+  }]
 }, { timestamps: true });
 
 // Define a method to add bonus spins for a valid referral
@@ -47,10 +46,14 @@ userSchema.methods.addBonusSpinsForReferral = async function() {
 };
 
 userSchema.methods.addFreeSpin = function() {
-  this.spinsAvailable += 1;
-  this.lastSpinTime = Date.now();
+  if (this.spinsAvailable < 2) {
+    this.spinsAvailable += 1;
+  }
+  if (this.lastSpinTime.length >= 2) {
+    this.lastSpinTime.shift(); // Remove the oldest time if length is >= 2
+  }
+  this.lastSpinTime.push(Date.now());
 };
-
 
 // Create the User model
 const User = mongoose.model('User', userSchema);
