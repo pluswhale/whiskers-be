@@ -4,6 +4,7 @@ const cors = require('cors');
 const User = require('./mongo/User'); // Import the User model
 const addFreeSpinIfNeeded = require('./middleware/addFreeSpinIfNeeded');
 const checkSpinAvailability = require('./middleware/checkSpinAvailability');
+const TelegramBot = require('node-telegram-bot-api');
 
 // Create Express app
 const app = express();
@@ -12,6 +13,28 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.json());
 app.use(cors());
+
+const token = '6790130833:AAFm1XC61QQ2nbnMNAGUgknZ1J0YDQS385E'; // replace with your bot token
+const bot = new TelegramBot(token, { polling: true });
+
+bot.onText(/\/start/, (msg) => {
+  const chatId = msg.chat.id;
+
+  const options = {
+    reply_markup: {
+      inline_keyboard: [
+        [
+          {
+            text: 'Play the Game',
+            web_app: { url: 'https://pluswhale.github.io/whiskers' } // replace with your web app URL
+          }
+        ]
+      ]
+    }
+  };
+
+  bot.sendMessage(chatId, 'Click the button below to play the game:', options);
+});
 
 const uri = "mongodb+srv://mongouser:5x7vraPGdDiGV8g3@cluster0.3yldtew.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 const clientOptions = { serverApi: { version: '1', strict: true, deprecationErrors: true } };
@@ -23,17 +46,17 @@ async function run() {
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
     // Create the first user
-    const newUser = new User({
-      userId: '1', // Replace with an actual user ID
-      unclaimedTokens: 0,
-      spinsAvailable: 2,
-      bonusSpins: 0,
-      referralCode: 'unique_referral_code', // Replace with a unique referral code
-      referredBy: null, // If this is the first user, there is no referrer
-      referredUsers: [] // No referred users for the first user
-    });
+    // const newUser = new User({
+    //   userId: '1', // Replace with an actual user ID
+    //   unclaimedTokens: 0,
+    //   spinsAvailable: 2,
+    //   bonusSpins: 0,
+    //   referralCode: 'unique_referral_code', // Replace with a unique referral code
+    //   referredBy: null, // If this is the first user, there is no referrer
+    //   referredUsers: [] // No referred users for the first user
+    // });
 
-    await newUser.save();
+    // await newUser.save();
     console.log('First user created successfully!');
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
