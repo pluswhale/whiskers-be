@@ -8,8 +8,11 @@
     "npm": ">=6.x"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "heroku-prebuild": "npm install",
+    "postinstall": "npm install",
+    "start": "node index.js",
+    "lint": "eslint .",
+    "test": "jest"
   },
   "author": "",
   "license": "ISC",
@@ -18,5 +21,8 @@
     "express": "^4.19.2",
     "mongoose": "^8.3.4",
     "node-telegram-bot-api": "^0.65.1"
+  },
+  "devDependencies": {
+    "husky": "^9.0.11"
   }
 }
