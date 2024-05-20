@@ -5,6 +5,8 @@ const User = require('./mongo/User'); // Import the User model
 const addFreeSpinIfNeeded = require('./middleware/addFreeSpinIfNeeded');
 const checkSpinAvailability = require('./middleware/checkSpinAvailability');
 const TelegramBot = require('node-telegram-bot-api');
+const { v4: uuidv4 } = require('uuid');
+
 
 // Create Express app
 const app = express();
@@ -57,7 +59,8 @@ app.get('/', (req, res) => {
 });
 
 app.post('/login/:userId', async (req, res) => {
-  const userId = req.params.userId; // Assuming userId is passed in the request body
+  const userId = req.params.userId;
+  const referal = uuidv4();
 
   try {
     const user = await User.findOne({ userId });
@@ -70,7 +73,7 @@ app.post('/login/:userId', async (req, res) => {
         unclaimedTokens: 0,
         spinsAvailable: 2,
         bonusSpins: 0,
-        referralCode: 'unique_referral_code', // Replace with a unique referral code
+        referralCode: referal, // Replace with a unique referral code
         referredBy: null, // If this is the first user, there is no referrer
         referredUsers: [] // No referred users for the first user
       });
