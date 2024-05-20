@@ -8,8 +8,6 @@
     "npm": ">=6.x"
   },
   "scripts": {
-    "heroku-prebuild": "npm install",
-    "postinstall": "npm install",
     "start": "node index.js",
     "lint": "eslint .",
     "test": "jest"
