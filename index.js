@@ -44,20 +44,6 @@ async function run() {
     await mongoose.connect(uri, clientOptions);
     await mongoose.connection.db.admin().command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
-
-    // Create the first user
-    // const newUser = new User({
-    //   userId: '1', // Replace with an actual user ID
-    //   unclaimedTokens: 0,
-    //   spinsAvailable: 2,
-    //   bonusSpins: 0,
-    //   referralCode: 'unique_referral_code', // Replace with a unique referral code
-    //   referredBy: null, // If this is the first user, there is no referrer
-    //   referredUsers: [] // No referred users for the first user
-    // });
-
-    // await newUser.save();
-    console.log('First user created successfully!');
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
   }
@@ -76,17 +62,25 @@ app.post('/login/:userId', async (req, res) => {
   try {
     const user = await User.findOne({ userId });
 
+    let newUser;
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      const userObject = new User({
+        userId: userId, // Replace with an actual user ID
+        unclaimedTokens: 0,
+        spinsAvailable: 2,
+        bonusSpins: 0,
+        referralCode: 'unique_referral_code', // Replace with a unique referral code
+        referredBy: null, // If this is the first user, there is no referrer
+        referredUsers: [] // No referred users for the first user
+      });
+      newUser =  await userObject.save();
     }
-
-    // Logic to authenticate the user
 
     // After successful authentication, proceed with the free spin check
     await addFreeSpinIfNeeded(req, res, async () => {
       // Login response logic here
-      res.status(200).json({ message: 'Login successful', user });
+      res.status(200).json({ message: 'Login successful', user: user || newUser });
     });
 
   } catch (error) {
