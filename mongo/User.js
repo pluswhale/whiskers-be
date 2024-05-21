@@ -11,6 +11,10 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  countSpins: {
+    type: Number,
+    default: 0
+  },
   spinsAvailable: {
     type: Number,
     default: 2

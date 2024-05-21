@@ -72,6 +72,7 @@ app.post('/login/:userId', async (req, res) => {
         userId: userId, // Replace with an actual user ID
         unclaimedTokens: 0,
         spinsAvailable: 2,
+        countSpins: 0,
         bonusSpins: 0,
         referralCode: referal, // Replace with a unique referral code
         referredBy: null, // If this is the first user, there is no referrer
@@ -128,6 +129,8 @@ app.post('/spin/:userId', addFreeSpinIfNeeded, checkSpinAvailability, async (req
       return res.status(400).json({ error: 'No spins available' });
     }
 
+    user.countSpins += 1;
+
     user.unclaimedTokens += winScore;
 
     if (isFreeSpin) {
@@ -167,6 +170,40 @@ app.post('/buy/:userId', async (req, res) => {
 
   } catch (error) {
     console.error('Error spinning wheel:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/referral/:referredUserId', async (req, res) => {
+  try {
+    const referredUserId = req.params.referredUserId;
+    const { referredById } = req.body;
+
+    const referredUser = await User.findOne({ userId: referredUserId });
+    const referredByUser = await User.findOne({ userId: referredById });
+
+    if (!referredUser) {
+      return res.status(404).json({ error: 'Referred user not found' });
+    }
+
+    if (!referredByUser) {
+      return res.status(404).json({ error: 'Referring user not found' });
+    }
+
+    // Update referredUser's referredBy field
+    referredUser.referredBy = referredByUser._id;
+
+    // Add referredUser's _id to referredByUser's referredUsers array
+    referredByUser.referredUsers.push(referredUser._id);
+
+    // Save the updates
+    await referredUser.save();
+    await referredByUser.save();
+
+    res.status(200).json({ message: 'Successfully referred by user' });
+
+  } catch (error) {
+    console.error('Error in referral process:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
