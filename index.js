@@ -4,15 +4,13 @@ const cors = require('cors');
 const User = require('./mongo/User'); // Import the User model
 const addFreeSpinIfNeeded = require('./middleware/addFreeSpinIfNeeded');
 const checkSpinAvailability = require('./middleware/checkSpinAvailability');
+const giveBonusSpinForReferralFriends = require('./middleware/giveBonusSpinForReferralFriends');
 const TelegramBot = require('node-telegram-bot-api');
 const { v4: uuidv4 } = require('uuid');
 
-
-// Create Express app
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(express.json());
 app.use(cors());
 
@@ -58,7 +56,7 @@ app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
-app.post('/login/:userId', async (req, res) => {
+app.post('/login/:userId', giveBonusSpinForReferralFriends, async (req, res) => {
   const userId = req.params.userId;
   const referal = uuidv4();
 
@@ -69,21 +67,20 @@ app.post('/login/:userId', async (req, res) => {
 
     if (!user) {
       const userObject = new User({
-        userId: userId, // Replace with an actual user ID
+        userId: userId, 
         unclaimedTokens: 0,
         spinsAvailable: 2,
         countSpins: 0,
         bonusSpins: 0,
-        referralCode: referal, // Replace with a unique referral code
-        referredBy: null, // If this is the first user, there is no referrer
-        referredUsers: [] // No referred users for the first user
+        referralCode: referal,
+        referredBy: null, 
+        referredUsers: []
       });
       newUser =  await userObject.save();
     }
 
     // After successful authentication, proceed with the free spin check
     await addFreeSpinIfNeeded(req, res, async () => {
-      // Login response logic here
       res.status(200).json({ message: 'Login successful', user: user || newUser });
     });
 
@@ -98,18 +95,16 @@ app.get('/user/:userId', async (req, res) => {
   const userId = req.params.userId;
 
   try {
-    // Find the user by ID in the database
+
     const user = await User.findOne({ userId });
 
     if (!user) {
-      // If user not found, return 404 Not Found status
+    
       return res.status(404).json({ error: 'User not found' });
     }
-
-    // If user found, return the user data
+   
     res.json(user);
   } catch (error) {
-    // If an error occurs, return 500 Internal Server Error status
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
@@ -190,17 +185,19 @@ app.post('/referral/:referredUserId', async (req, res) => {
       return res.status(404).json({ error: 'Referring user not found' });
     }
 
-    // Update referredUser's referredBy field
-    referredUser.referredBy = referredByUser._id;
+    const isAlreadyReferred = referredByUser?.referredUsers?.some((currentReferredUser) => currentReferredUser.id.equals(referredUser._id));
 
-    // Add referredUser's _id to referredByUser's referredUsers array
-    referredByUser.referredUsers.push(referredUser._id);
+    if (!isAlreadyReferred) {
+      referredByUser?.referredUsers?.push({ isAccrued: false, id: referredUser?._id });
+      referredUser.referredBy = referredByUser?._id;
 
-    // Save the updates
-    await referredUser.save();
-    await referredByUser.save();
+      await referredUser.save();
+      await referredByUser.save();
 
-    res.status(200).json({ message: 'Successfully referred by user' });
+      res.status(200).json({ message: 'Successfully referred by user' });
+    } else {
+      res.status(400).json({ message: 'Such a user already was referred' });
+    }
 
   } catch (error) {
     console.error('Error in referral process:', error);
@@ -208,7 +205,6 @@ app.post('/referral/:referredUserId', async (req, res) => {
   }
 });
 
-// Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

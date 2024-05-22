@@ -16,14 +16,14 @@ const addFreeSpinIfNeeded = async (req, res, next) => {
       if (user.spinsAvailable < 2) {
         user.addFreeSpin();
       }
-      // Ensure lastSpinTime is updated for new users
+
       if (!lastSpinTime) {
         user.lastSpinTime.push(Date.now());
       }
       await user.save();
     }
 
-    req.user = user; // Pass the user object to the next middleware
+    req.user = user;
     next();
   } catch (error) {
     console.error('Error adding free spin:', error);

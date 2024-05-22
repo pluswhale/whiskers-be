@@ -1,6 +1,18 @@
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-// Define the User schema
+const ReferredUserSchema = new Schema({
+  isAccrued: {
+    type: Boolean,
+    default: false
+  },
+  id: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  }
+});
+
 const userSchema = new mongoose.Schema({
   userId: {
     type: String,
@@ -31,17 +43,13 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
-  referredUsers: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
+  referredUsers: [ReferredUserSchema],
   lastSpinTime: [{
     type: Date,
     default: Date.now
   }]
 }, { timestamps: true });
 
-// Define a method to add bonus spins for a valid referral
 userSchema.methods.addBonusSpinsForReferral = async function() {
   if (this.referredUsers.length >= 2) {
     this.bonusSpins += 3;
