@@ -21,7 +21,7 @@ const giveBonusSpinForReferralFriends = async (req, res, next) => {
             
           if (referredUserObject && referredUserObject.countSpins >= 2) {
             user.bonusSpins += 3;
-            referredUsers?.[i]?.isAccrued = true;  // Mark as accrued
+            referredUsers[i].isAccrued = true;  // Mark as accrued
           }
         }
       }
