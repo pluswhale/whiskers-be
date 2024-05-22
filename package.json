@@ -3,10 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "engines": {
-    "node": "18.x",
-    "npm": ">=6.x"
-  },
+
   "scripts": {
     "start": "node index.js",
     "lint": "eslint .",
