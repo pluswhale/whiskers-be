@@ -1,39 +1,40 @@
 const User = require('../mongo/User');
 
 const giveBonusSpinForReferralFriends = async (req, res, next) => {
-  const userId = req.params.userId;
+    const userId = req.params.userId;
+
+
   try {
     const user = await User.findOne({ userId });
 
     if (!user) {
-        next();
+        return next();
     }
+      
+    console.log(user);
       
     const referredUsers = user?.referredUsers;
-      
+
+    
     if (referredUsers) {
-      const changedReferredUsers =  referredUsers.map((referredUser) => {
+      for (let i = 0; i < referredUsers.length; i++) {
+        const referredUser = referredUsers[i];
         if (!referredUser.isAccrued) { 
-            const referredUserObject = User.findOne({ _id: referredUser?.id });
+            const referredUserObject = await User.findOne({ _id: referredUser.id });
+            
 
-            if (referredUserObject) {
-                if (referredUserObject.countSpins >= 2) {
-                    user.bonusSpins += 3;
-                    return { ...referredUser, isAccrued: true };
-                } 
-            }
-        } else {
-            return referredUser;
+          if (referredUserObject && referredUserObject.countSpins >= 2) {
+            user.bonusSpins += 3;
+            referredUsers[i].isAccrued = true;  // Mark as accrued
+          }
         }
-      });
-        user.referredUsers = changedReferredUsers;
+      }
 
-        await user.save();
-
+      user.referredUsers = referredUsers;
+      await user.save();
     }
-      
+    
     next();
-      
   } catch (error) {
     console.error('Error adding free spin:', error);
     res.status(500).json({ error: 'Internal server error' });

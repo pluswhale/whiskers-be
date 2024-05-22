@@ -177,6 +177,8 @@ app.post('/referral/:referredUserId', async (req, res) => {
     const referredUser = await User.findOne({ userId: referredUserId });
     const referredByUser = await User.findOne({ userId: referredById });
 
+    console.log('referredByUser', referredByUser);
+
     if (!referredUser) {
       return res.status(404).json({ error: 'Referred user not found' });
     }
@@ -185,7 +187,9 @@ app.post('/referral/:referredUserId', async (req, res) => {
       return res.status(404).json({ error: 'Referring user not found' });
     }
 
-    const isAlreadyReferred = referredByUser?.referredUsers?.some((currentReferredUser) => currentReferredUser.id.equals(referredUser._id));
+    const isAlreadyReferred = referredByUser?.referredUsers?.some((currentReferredUser) => currentReferredUser?.id?.equals(referredUser._id));
+
+    console.log('isAlreadyReferred', isAlreadyReferred);
 
     if (!isAlreadyReferred) {
       referredByUser?.referredUsers?.push({ isAccrued: false, id: referredUser?._id });
