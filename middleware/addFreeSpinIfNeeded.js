@@ -1,26 +1,42 @@
 const User = require('../mongo/User');
 
+const TWO_MINUTES = 2 * 60 * 1000; // for testing purposes
+const FIVE_HOURS = 5 * 60 * 60 * 1000;
+
 const addFreeSpinIfNeeded = async (req, res, next) => {
   const userId = req.params.userId;
+  
   try {
     const user = await User.findOne({ userId });
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const fiveHoursAgo = new Date(Date.now() - 5 * 60 * 60 * 1000);
-    const lastSpinTime = user.lastSpinTime.length ? new Date(user.lastSpinTime[user.lastSpinTime.length - 1]) : null;
+    const twoMinutesAgo = new Date(Date.now() - FIVE_HOURS);
+    const lastSpinTime = user?.lastSpinTime?.length ? new Date(user.lastSpinTime[user.lastSpinTime.length - 1]) : null;
 
-    if (!lastSpinTime || lastSpinTime < fiveHoursAgo) {
+    if (!lastSpinTime || lastSpinTime < twoMinutesAgo) {
       if (user.spinsAvailable < 2) {
-        user.addFreeSpin();
+        user.spinsAvailable += 1;
       }
 
-      if (!lastSpinTime) {
-        user.lastSpinTime.push(Date.now());
+      if (user.lastSpinTime.length >= 2) {
+        user.lastSpinTime.shift(); // Remove the oldest time if length is >= 2
       }
-      await user.save();
+
+      user.lastSpinTime.push(new Date());
+
+      await User.updateOne(
+        { _id: user._id, __v: user.__v },
+        {
+          $set: {
+            spinsAvailable: user.spinsAvailable,
+            lastSpinTime: user.lastSpinTime
+          },
+          $inc: { __v: 1 } 
+        }
+      );
     }
 
     req.user = user;

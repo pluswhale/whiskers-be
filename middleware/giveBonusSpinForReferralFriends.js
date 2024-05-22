@@ -10,22 +10,18 @@ const giveBonusSpinForReferralFriends = async (req, res, next) => {
     if (!user) {
         return next();
     }
-      
-    console.log(user);
-      
+            
     const referredUsers = user?.referredUsers;
 
-    
     if (referredUsers) {
       for (let i = 0; i < referredUsers.length; i++) {
         const referredUser = referredUsers[i];
-        if (!referredUser.isAccrued) { 
+        if (!referredUser?.isAccrued) { 
             const referredUserObject = await User.findOne({ _id: referredUser.id });
             
-
           if (referredUserObject && referredUserObject.countSpins >= 2) {
             user.bonusSpins += 3;
-            referredUsers[i].isAccrued = true;  // Mark as accrued
+            referredUsers?.[i]?.isAccrued = true;  // Mark as accrued
           }
         }
       }

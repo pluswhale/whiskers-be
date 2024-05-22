@@ -50,24 +50,6 @@ const userSchema = new mongoose.Schema({
   }]
 }, { timestamps: true });
 
-userSchema.methods.addBonusSpinsForReferral = async function() {
-  if (this.referredUsers.length >= 2) {
-    this.bonusSpins += 3;
-    await this.save();
-  }
-};
-
-userSchema.methods.addFreeSpin = function() {
-  if (this.spinsAvailable < 2) {
-    this.spinsAvailable += 1;
-  }
-  if (this.lastSpinTime.length >= 2) {
-    this.lastSpinTime.shift(); // Remove the oldest time if length is >= 2
-  }
-  this.lastSpinTime.push(Date.now());
-};
-
-// Create the User model
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;
