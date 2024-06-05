@@ -9,7 +9,6 @@
   },
   "scripts": {
     "start": "node index.js",
-    "lint": "eslint .",
     "test": "jest"
   },
   "author": "",

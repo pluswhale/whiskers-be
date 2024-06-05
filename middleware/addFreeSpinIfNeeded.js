@@ -1,4 +1,4 @@
-const User = require('../mongo/User');
+const User = require('../mongo/spin-and-earn/User');
 
 const TWO_MINUTES = 2 * 60 * 1000; // for testing purposes
 const FIVE_HOURS = 5 * 60 * 60 * 1000;

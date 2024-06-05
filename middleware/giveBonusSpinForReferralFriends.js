@@ -1,4 +1,4 @@
-const User = require('../mongo/User');
+const User = require('../mongo/spin-and-earn/User');
 
 const giveBonusSpinForReferralFriends = async (req, res, next) => {
     const userId = req.params.userId;

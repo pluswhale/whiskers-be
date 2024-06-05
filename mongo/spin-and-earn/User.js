@@ -19,9 +19,17 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  unclaimedTokens: {
+  points: {
     type: Number,
     default: 0
+  },
+  unclaimedWhisks: {
+    type: Number,
+    default: 0
+  },
+  userTonAddress: {
+    type: String,
+    default: null
   },
   countSpins: {
     type: Number,

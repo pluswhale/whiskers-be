@@ -1,6 +1,7 @@
-const User = require('../mongo/User');
+const User = require('../../mongo/spin-and-earn/User');
 const { v4: uuidv4 } = require('uuid');
-const addFreeSpinIfNeeded = require('../middleware/addFreeSpinIfNeeded'); 
+const addFreeSpinIfNeeded = require('../../middleware/addFreeSpinIfNeeded'); 
+const Snapshot = require('../../mongo/spin-and-earn/Snapshot');
 
 async function loginUser(req, res) {
   const userId = req.params.userId;
@@ -12,7 +13,9 @@ async function loginUser(req, res) {
     if (!user) {
       const userObject = new User({
         userId: userId, 
-        unclaimedTokens: 0,
+        points: 0,
+        unClaimedWhisks: 0,
+        userTonAddress: null,
         spinsAvailable: 2,
         countSpins: 0,
         bonusSpins: 0,
@@ -26,6 +29,27 @@ async function loginUser(req, res) {
     await addFreeSpinIfNeeded(req, res, async () => {
       res.status(200).json({ message: 'Login successful', user });
     });
+
+  } catch (error) {
+    console.error('Error during login:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+async function saveTonAddress(req, res) {
+  const userId = req.params.userId;
+  const { userTonAddress } = req.body;
+
+  try {
+    let user = await User.findOne({ userId });
+
+    if (!user.userTonAddress) {
+      user.userTonAddress = userTonAddress;
+      user = await user.save();
+      return res.status(200).json({ message: 'User ton address got saved.' });
+    }
+
+    res.status(400).json({ message: 'User ton address already exists' });
 
   } catch (error) {
     console.error('Error during login:', error);
@@ -51,6 +75,51 @@ async function getUserById(req, res) {
   }
 }
 
+async function getUsersUnclaimedWhisks(req, res) {
+  try {
+     const users = await User.find({}, 'userTonAddress unclaimedWhisks');
+
+    if (!users || users.length === 0) {
+      return res.status(404).json({ error: 'Users not found' });
+    }
+   
+    const usersWithSelectedFields = users.map(user => ({
+      userId: user.userId,
+      userTonAddress: user.userTonAddress,
+      unclaimedWhisks: user.unclaimedWhisks,
+      points: user.points
+    }));
+
+    res.json(usersWithSelectedFields);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' + error});
+  }
+}
+
+async function claimUserWhisks(req, res) {
+  const userId = req.params.userId;
+  try {
+
+    const user = await User.findOne({userId});
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (user.unclaimedWhisks) {
+      user.unclaimedWhisks = 0;
+      user.points = 0;
+      await user.save();
+      return res.status(200).json({message: 'successfully claimed whisks'});
+    }
+
+    res.status(400).json({ message: 'not enough unclaimed whisks' });
+    
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
 async function getSpinByUser(req, res) {
   try {
 
@@ -68,7 +137,8 @@ async function getSpinByUser(req, res) {
 
     user.countSpins += 1;
 
-    user.unclaimedTokens += winScore;
+    user.points += winScore;
+    user.unclaimedWhisks += winScore;
 
     if (isFreeSpin) {
       user.spinsAvailable -= 1;
@@ -151,10 +221,58 @@ async function getReferredFriend(req, res) {
   }
 }
 
+async function getSnapshot(req, res) {
+  try {
+
+    const snapshots = await Snapshot.find({}, "airdropCell campaignNumber");
+
+    if (!snapshots) {
+    
+      return res.status(404).json({ error: 'snapshots not found' });
+    }
+   
+    res.json(snapshots);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+async function updateSnapshot(req, res) {
+  const { airdropCell, campaignNumber } = req.body;
+  try {
+
+    const snapshot = await Snapshot.findOne({snapShotId: 1});
+
+    if (!snapshot) {
+
+      return res.status(404).json({ error: 'snapshot not found' });
+    }
+
+    if (airdropCell) {
+      snapshot.airdropCell = airdropCell;
+    }
+
+    if (campaignNumber) {
+      snapshot.campaignNumber = campaignNumber;
+    }
+
+    snapshot.save();
+   
+    res.status(200).json('snapshot changed successfully');
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
 module.exports = {
     loginUser,
     getUserById,
     getSpinByUser,
     getBonusSpinsByUser,
-    getReferredFriend
+    getReferredFriend,
+    saveTonAddress,
+    getUsersUnclaimedWhisks,
+    claimUserWhisks,
+    getSnapshot,
+    updateSnapshot
 };

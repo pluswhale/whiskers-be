@@ -6,6 +6,8 @@ const appRoutes = require('./routes/appRoutes');
 const TelegramBot = require('node-telegram-bot-api');
 const app = express();
 const PORT = process.env.PORT || 3000;
+const User = require('./mongo/spin-and-earn/User');
+const Snapshot = require('./mongo/spin-and-earn/Snapshot');
 
 app.use(express.json());
 app.use(cors());
@@ -40,6 +42,43 @@ async function run() {
     await mongoose.connect(uri, clientOptions);
     await mongoose.connection.db.admin().command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
+
+    //init snapshot
+    const snapshot = await Snapshot.findOne({ snapShotId: 1 });
+
+    if (!snapshot) {
+
+      new Snapshot({
+        airdropCell: 1,
+        campaignNumber: 1
+      }).save();
+
+    }
+
+    // init admin user
+    const adminUserId = 1;
+
+    let adminUser = await User.findOne({ userId: adminUserId });
+
+    if (!adminUser) {
+      // Create the admin user
+      const userObject = new User({
+        userId: adminUserId,
+        points: 0,
+        unClaimedWhisks: 0,
+        userTonAddress: null,
+        spinsAvailable: 2,
+        countSpins: 0,
+        bonusSpins: 0,
+        referralCode: 'admin',
+        referredBy: null,
+        referredUsers: []
+      });
+
+      adminUser = await userObject.save();
+
+    }
+
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
   }

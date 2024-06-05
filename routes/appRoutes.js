@@ -1,14 +1,27 @@
 const express = require('express');
 const router = express.Router();
-const appControllers = require('../controllers/appControllers')
+const appControllers = require('../controllers/spin-and-earn/appControllers')
+const plinkoControllers = require('../controllers/plinko/appControllers')
 const giveBonusSpinForReferralFriends = require('../middleware/giveBonusSpinForReferralFriends');
 const addFreeSpinIfNeeded = require('../middleware/addFreeSpinIfNeeded');
 const checkSpinAvailability = require('../middleware/checkSpinAvailability');
+const authenticateAdmin = require('../middleware/adminAuthenrticate');
 
-router.post('/login/:userId', giveBonusSpinForReferralFriends, appControllers.loginUser);
-router.get('/user/:userId', appControllers.getUserById);
-router.post('/spin/:userId', addFreeSpinIfNeeded, checkSpinAvailability, appControllers.getSpinByUser);
-router.post('/buy/:userId', appControllers.getBonusSpinsByUser);
-router.post('/referral/:referredUserId', appControllers.getReferredFriend);
+//spin and earn
+router.get('/spin-and-earn/user/:userId', appControllers.getUserById);
+router.get('/spin-and-earn/snapshot', appControllers.getSnapshot);
+router.post('/spin-and-earn/snapshot/update', authenticateAdmin, appControllers.updateSnapshot); // it's only for admin
+router.get('/spin-and-earn/unclaimed-whisks/', appControllers.getUsersUnclaimedWhisks);
+router.post('/spin-and-earn/claim-whisks/:userId', appControllers.claimUserWhisks);
+router.post('/spin-and-earn/login/:userId', giveBonusSpinForReferralFriends, appControllers.loginUser);
+router.post('/spin-and-earn/ton-address/:userId', appControllers.saveTonAddress); // save ton address
+router.post('/spin-and-earn/spin/:userId', addFreeSpinIfNeeded, checkSpinAvailability, appControllers.getSpinByUser);
+router.post('/spin-and-earn/buy/:userId', appControllers.getBonusSpinsByUser);
+router.post('/spin-and-earn/referral/:referredUserId', appControllers.getReferredFriend);
+
+//plinko
+router.post('/plinko/login/:userId', plinkoControllers.loginUser);
+router.get('/plinko/user/:userId', plinkoControllers.getUserById);
+router.post('/plinko/points/:userId', plinkoControllers.updateBalance);
 
 module.exports = router;
