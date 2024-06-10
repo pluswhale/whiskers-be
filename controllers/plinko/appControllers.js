@@ -42,7 +42,7 @@ async function getUserById(req, res) {
   }
 }
 
-async function updateBalance(req, res) {
+async function incrementBalance(req, res) {
   const userId = req.params.userId;
   const winPoints = req.body.points;
 
@@ -56,6 +56,30 @@ async function updateBalance(req, res) {
 
     user.unclaimedWhisks += winPoints;
     user.points += winPoints;
+
+    await user.save();
+
+    res.status(200).json('succession update the points');
+
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+async function decrementBalance(req, res) {
+  const userId = req.params.userId;
+  const winPoints = req.body.points;
+
+  try {
+
+    const user = await User.findOne({ userId });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    user.unclaimedWhisks -= winPoints;
+    user.points -= winPoints;
 
     await user.save();
 
@@ -117,7 +141,8 @@ async function withdrawBalance(req, res) {
 module.exports = {
   loginUser,
   getUserById,
-  updateBalance,
+  incrementBalance,
+  decrementBalance,
   topupBalance,
   withdrawBalance,
 };
