@@ -23,5 +23,7 @@ router.post('/spin-and-earn/referral/:referredUserId', appControllers.getReferre
 router.post('/plinko/login/:userId', plinkoControllers.loginUser);
 router.get('/plinko/user/:userId', plinkoControllers.getUserById);
 router.post('/plinko/points/:userId', plinkoControllers.updateBalance);
+router.post('/plinko/balance/topup/:userId', plinkoControllers.topupBalance);
+router.post('/plinko/balance/withdraw/:userId', plinkoControllers.withdrawBalance);
 
 module.exports = router;
