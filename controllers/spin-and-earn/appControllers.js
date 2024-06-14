@@ -142,8 +142,13 @@ async function getSpinByUser(req, res) {
 
     if (isFreeSpin) {
       user.spinsAvailable -= 1;
+      user.lastSpinTime.push(new Date());
     } else {
       user.bonusSpins -= 1;
+    }
+
+    if (user.lastSpinTime.length > 2) {
+      user.lastSpinTime.shift();
     }
 
     await user.save();

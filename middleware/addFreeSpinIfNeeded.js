@@ -1,7 +1,7 @@
 const User = require('../mongo/spin-and-earn/User');
 
 const TWO_MINUTES = 2 * 60 * 1000; // for testing purposes
-const FIVE_HOURS = 5 * 60 * 60 * 1000;
+const FIVE_HOURS = 6 * 60 * 60 * 1000;
 
 const addFreeSpinIfNeeded = async (req, res, next) => {
   const userId = req.params.userId;
@@ -13,20 +13,23 @@ const addFreeSpinIfNeeded = async (req, res, next) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const twoMinutesAgo = new Date(Date.now() - FIVE_HOURS);
-    const lastSpinTime = user?.lastSpinTime?.length ? new Date(user.lastSpinTime[user.lastSpinTime.length - 1]) : null;
+    const twoMinutesAgo = new Date(Date.now() - FIVE_HOURS); // 2 minutes ago
+    const lastSpinTimes = user.lastSpinTime || [];
 
-    if (!lastSpinTime || lastSpinTime < twoMinutesAgo) {
-      if (user.spinsAvailable < 2) {
-        user.spinsAvailable += 1;
+    // Calculate how many spins should be recharged
+    let spinsToRecharge = 0;
+    lastSpinTimes.forEach((spinTime, index) => {
+      if (new Date(spinTime) < twoMinutesAgo) {
+        spinsToRecharge++;
+        lastSpinTimes[index] = null; // Mark for removal
       }
+    });
 
-      if (user.lastSpinTime.length >= 2) {
-        user.lastSpinTime.shift(); // Remove the oldest time if length is >= 2
-      }
+    // Remove nulls (old spin times)
+    user.lastSpinTime = lastSpinTimes.filter(Boolean);
 
-      user.lastSpinTime.push(new Date());
-
+    if (spinsToRecharge > 0) {
+      user.spinsAvailable = Math.min(user.spinsAvailable + spinsToRecharge, 2);
       await User.updateOne(
         { _id: user._id, __v: user.__v },
         {
